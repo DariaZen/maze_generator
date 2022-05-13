@@ -14,7 +14,6 @@ class Maze:
         vertical_walls = [[True for __ in range(width + 1)] for _ in range(height)]
         self.horizontal_walls = horizontal_walls
         self.vertical_walls = vertical_walls
-
         self.solution = []
 
     def find_neighbors(self, cell):
@@ -86,9 +85,20 @@ class Maze:
 
     def dfs_generate(self):
         x = random.randint(0, self.height - 1)
-        y = random.randint(0,  self.width - 1)
+        y = random.randint(0, self.width - 1)
         self.dfs(x, y)
         self.break_wall()
+
+    def is_wall(self, cell1, cell2):
+        if cell1.x == cell2.x:
+            # (cell1.x, cell1.y, cell2.y )
+            if self.vertical_walls[cell1.x][max(cell1.y, cell2.y)]:
+                return True
+            return False
+
+        if self.horizontal_walls[max(cell1.x, cell2.x)][cell1.y]:
+            return True
+        return False
 
     def spanning_tree(self, walls):
         count = 1
@@ -127,3 +137,21 @@ class Maze:
         random.shuffle(walls)
         self.spanning_tree(walls)
         self.break_wall()
+
+    def dfs_solve(self, cur_x, cur_y):
+        if not self.maze[cur_x][cur_y].used:
+            self.maze[cur_x][cur_y].used = True
+            neighbours = self.find_neighbors(self.maze[cur_x][cur_y])
+            for i in neighbours:
+                if not i.used and not self.is_wall(self.maze[cur_x][cur_y], i):
+                    i.parent = (cur_x, cur_y)
+                    self.dfs_solve(i.x, i.y)
+
+    def solve(self):
+        self.dfs_solve(0, 0)
+        self.solution.append((self.height - 1, self.width - 1))
+        (x, y) = self.maze[self.height - 1][self.width - 1].parent
+        while (x, y) != (0, 0):
+            self.solution.append((x, y))
+            (x, y) = self.maze[x][y].parent
+        self.solution.append((0, 0))

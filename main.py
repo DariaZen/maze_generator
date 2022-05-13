@@ -2,25 +2,43 @@ import tkinter
 import sys
 import maze
 import graphics
-from tkinter.filedialog import asksaveasfile
 
 sys.setrecursionlimit(1000000)
 
+count = 0
+current_maze = maze.Maze(5, 5)
 
-def draw(current_maze, size):
+
+def draw(size):
+    global current_maze
     graphics.delete_walls(canvas)
+    graphics.delete_solution(canvas)
     for i in range(current_maze.height + 1):
         for j in range(current_maze.width):
             if current_maze.horizontal_walls[i][j]:
                 graphics.walls.append(
                     canvas.create_line(300 + i * 10 * 50 // size, 100 + j * 10 * 50 // size,
-                                       300 + 10 * i * 50 // size, 100 + 10 * 50 // size + 10 * j * 50 // size, fill='black'))
+                                       300 + 10 * i * 50 // size, 100 + 10 * 50 // size + 10 * j * 50 // size,
+                                       fill='black'))
     for i in range(current_maze.height):
         for j in range(current_maze.width + 1):
             if current_maze.vertical_walls[i][j]:
                 graphics.walls.append(
                     canvas.create_line(300 + i * 10 * 50 // size, 100 + j * 10 * 50 // size,
-                                       300 + 10 * 50 // size + 10 * i * 50 // size, 100 + 10 * j * 50 // size, fill='black'))
+                                       300 + 10 * 50 // size + 10 * i * 50 // size, 100 + 10 * j * 50 // size,
+                                       fill='black'))
+
+
+def draw_solution(size):
+    global current_maze
+    for i in current_maze.solution:
+        x = 10 * 50 // (4 * size)
+        graphics.solution.append(
+            canvas.create_oval(x + 300 + i[0] * 10 * 50 // size, x + 100 + i[1] * 10 * 50 // size,
+                               -x + 300 + 10 * 50 // size + 10 * i[0] * 50 // size,
+                               -x + 100 + 10 * 50 // size + 10 * i[1] * 50 // size,
+                               outline='green',
+                               fill='green'))
 
 
 def check():
@@ -40,27 +58,50 @@ def check():
 
     return height, width
 
+
 def click_btn_dfs():
+    global current_maze
     height, width = check()
-    current_maze = maze.Maze(height, int(width))
+    current_maze = maze.Maze(width, height)
     current_maze.dfs_generate()
     size = max(height, width)
-    draw(current_maze, size)
-    btn_download.place(x=800, y=0)
+    draw(size)
+    btn_sol['text'] = "Show solution"
+    btn_sol.place(x=800, y=0)
 
 
 def click_btn_tree():
+    global current_maze
     height, width = check()
-    current_maze = maze.Maze(height, int(width))
+    current_maze = maze.Maze(width, height)
     current_maze.tree_generate()
     size = max(height, width)
-    draw(current_maze, size)
-    btn_download.place(x=800, y=0)
+    draw(size)
+    btn_sol['text'] = "Show solution"
+    btn_sol.place(x=800, y=0)
 
 
 def click_btn_download():
-    files = [('PDF Files', '*.pdf'),]
-    file = asksaveasfile(filetypes=files, defaultextension=files)
+    name = "my_maze"
+    global count
+    if count == 0:
+        f = open(name + ".txt", "w+")
+    else:
+        f = open(name + str(count) + ".txt", "w+")
+    count += 1
+    f.close()
+
+
+def click_btn_sol():
+    global current_maze
+    if btn_sol['text'] == "Show solution":
+        current_maze.solve()
+        size = max(current_maze.width, current_maze.height)
+        draw_solution(size)
+        btn_sol['text'] = "Hide solution"
+    else:
+        graphics.delete_solution(canvas)
+        btn_sol['text'] = "Show solution"
 
 
 graphics = graphics.Graphics()
@@ -94,11 +135,11 @@ btn_tree = tkinter.Button(
 )
 btn_tree.place(x=600, y=0)
 
-btn_download = tkinter.Button(
-    text="Download",
+btn_sol = tkinter.Button(
+    text="Show solution",
     width=20,
     height=3,
-    command=click_btn_download
+    command=click_btn_sol
 )
 
 window.mainloop()

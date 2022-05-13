@@ -3,6 +3,8 @@ class Cell:
         self.x = x
         self.y = y
         self.condition = condition
+        self.used = False
+        self.parent = (-1, -1)
 
     def find_wall(self, other):
         if other.x == self.x:
